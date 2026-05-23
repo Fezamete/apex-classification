@@ -16,8 +16,8 @@
 |------|-----|--------|
 | Feza | 1–2 | Business Understanding + EDA |
 | Cenker | 3 | Data Preparation + Pipeline |
-| Ethem | 4–5 | Modeling + Evaluation |
-| Berkay | 6 | Deployment + Tanıtım Sitesi |
+| Berkay | 4–5 | Modeling + Evaluation |
+| Ethem | 6 | Deployment + Tanıtım Sitesi |
 
 Detaylı görev listeleri için: `TASKS.md`
 
@@ -57,9 +57,9 @@ Section 0: Hero & Proje Tanıtımı (HTML)
 Section 1: Business Understanding       ← Feza
 Section 2: Data Understanding / EDA     ← Feza
 Section 3: Data Preparation + Pipeline  ← Cenker
-Section 4: Modeling                     ← Ethem
-Section 5: Evaluation                   ← Ethem
-Section 6: Deployment Simulation        ← Berkay
+Section 4: Modeling                     ← Berkay
+Section 5: Evaluation                   ← Berkay
+Section 6: Deployment Simulation        ← Ethem
 ```
 
 ---
