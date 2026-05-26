@@ -27,6 +27,7 @@ Detaylı görev listeleri için: `TASKS.md`
 
 ```
 apex-v2/
+├── plans_and_agents/             # Planlar, Agent Yönergeleri ve Proje Günlüğü
 ├── data/
 │   ├── raw/                        # Orijinal, dokunulmamış veri
 │   └── processed/                  # Pipeline çıktıları (train/test split)
