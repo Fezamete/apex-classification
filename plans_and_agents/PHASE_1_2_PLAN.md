@@ -59,32 +59,40 @@ EDA süreci, verideki örüntüleri ortaya çıkarmak, veri kalitesi sorunların
 * **Analiz Yorumu:** Eksik değerlerin rastgele mi (MCAR/MAR) yoksa belirli örüntülere göre mi (MNAR) oluştuğu tartışılacak.
 
 ### 2.4. Adım: Sayısal Değişken Dağılımları (Univariate Analysis)
-* **Aksiyon:** `Pre_Semester_GPA`, `Post_Semester_GPA`, `Weekly_GenAI_Hours`, `Traditional_Study_Hours`, `Tool_Diversity`, `Skill_Retention_Score`, `Anxiety_Level_During_Exams` değişkenleri incelenecek.
+* **Aksiyon:** `Pre_Semester_GPA`, `Weekly_GenAI_Hours`, `Traditional_Study_Hours`, `Skill_Retention_Score`, `Anxiety_Level_During_Exams`, `Tool_Diversity`, `Perceived_AI_Dependency` ve `Post_Semester_GPA` (toplam 8 adet) değişkenleri incelenecek.
 * **Grafik (Plotly):** Her sayısal değişken için yan yana histogram (dağılımı görmek için) ve box-plot (çeyreklikler ve yayılımı görmek için).
-* **Analiz Yorumu:** Dağılımların normal dağılıma uygunluğu, çarpıklık (skewness) durumları tartışılacak.
+* **Analiz Yorumu:** Dağılımların normal dağılıma uygunluğu, çarpıklık (skewness) durumları tartışılacak. Not: `Post_Semester_GPA` değişkeninin veri sızıntısı oluşturması nedeniyle modelleme öncesi veri setinden düşürüleceği belirtilecektir.
 
 ### 2.5. Adım: Kategorik Değişken Frekans Analizi
 * **Aksiyon:** `Major_Category`, `Year_of_Study`, `Primary_Use_Case`, `Prompt_Engineering_Skill`, `Paid_Subscription`, `Institutional_Policy` sütunları incelenecek.
 * **Grafik (Plotly):** Her kategorik değişken için frekans bar grafikleri (Grouped or Stacked by Target - `Burnout_Risk_Level`).
-* **Analiz Yorumu:** Örneğin, belirli bölümlerde (Major_Category) veya yapay zekayı belirli amaçlarla kullananlarda (Primary_Use_Case) tükenmişlik oranlarının nasıl değiştiği açıklanacak.
+* **Analiz Yorumu:** Örneğin, belirli bölümlerde (Major_Category) veya yapay zekayı belirli amaçlarla kullananlarda (Primary_Use_Case) tükenmişlik oranlarının nasıl değiştiği açıklanacak. `Primary_Use_Case` analizinde riskin tüm kullanım amaçlarında dengeli olduğu (%25-%28 bandı) ve `Debugging/Troubleshooting` grubunun hacimsel lider olduğu vurgulanacaktır.
 
 ### 2.6. Adım: Korelasyon Matrisi (Multivariate Analysis)
-* **Aksiyon:** Sayısal değişkenlerin Pearson korelasyon katsayıları hesaplanacak.
+* **Aksiyon:** Sayısal değişkenlerin Pearson korelasyon katsayıları hesaplanacak. Hedef değişken `Burnout_Risk_Level` de ordinal olarak (`Low`: 0, `Medium`: 1, `High`: 2) matrise dahil edilecek.
 * **Grafik (Plotly Heatmap):** Korelasyon katsayılarını renk skalasıyla gösteren, hücre içi değerleri yazılı matris grafiği.
-* **Analiz Yorumu:** `Weekly_GenAI_Hours` ile GPA değişimleri arasındaki ilişkiler, `Anxiety_Level_During_Exams` ile `Skill_Retention_Score` arasındaki negatif/pozitif bağlar yorumlanacak.
+* **Analiz Yorumu:** `Weekly_GenAI_Hours` ve `Perceived_AI_Dependency` gibi değişkenlerin hedef değişkenle olan doğrusal ilişkileri ile geleneksel çalışma saatleri arasındaki negatif korelasyon yorumlanacak.
 
 ### 2.7. Adım: Aykırı Değer (Outlier) Tespiti
-* **Aksiyon:** Sayısal sütunlarda Tukey yöntemi (IQR = Q3 - Q1) kullanılarak alt sınır ($Q1 - 1.5 \times IQR$) ve üst sınır ($Q3 + 1.5 \times IQR$) dışındaki aykırı değerler belirlenecek.
+* **Aksiyon:** 8 sayısal sütunda Tukey yöntemi (IQR = Q3 - Q1) kullanılarak alt sınır ($Q1 - 1.5 \times IQR$) ve üst sınır ($Q3 + 1.5 \times IQR$) dışındaki aykırı değerler belirlenecek.
 * **Görsel:** Aykırı değerleri gösteren hedef bazlı box-plot grafikleri.
 * **Analiz Yorumu:** Tespit edilen aykırı değerlerin silinmesi mi gerektiği (anomaly) yoksa veri setinin doğal bir varyasyonu mu olduğu ve modelleme öncesi kırpma (clipping) önerisi tartışılacak.
 
-### 2.8. Adım: EDA Sonu Handoff Notları ve Raporlama
+### 2.8. Adım: Veri Sızıntısı (Data Leakage) Değerlendirmesi
+* **Aksiyon:** Dönem başında bilinmeyen ve hedefe bağlı olarak sızıntı yapabilecek özellikler değerlendirilecek.
+* **İçerik:**
+  * `Post_Semester_GPA` dönem sonu verisi olduğundan veri sızıntısını önlemek amacıyla kesinlikle modelden düşürülecektir.
+  * `GPA_Change` (Not Değişimi) türetim önerisi, `Post_Semester_GPA` içerdiği için veri sızıntısı sebebiyle iptal edilmiştir.
+  * `Skill_Retention_Score` (Beceri Kalıcılığı Skoru) dönem içi bir değerlendirme olarak kabul edilmiş olup, model üzerindeki etkisi sızıntı şüphesine karşı yakından izlenecektir.
+
+### 2.9. Adım: EDA Sonu Handoff Notları ve Raporlama
 * **Aksiyon:** Sonraki adımı devralacak olan **Cenker (Faz 3)** için net bir veri hazırlama stratejisi sunulacak.
 * **İçerik:**
-  * Eksik değer barındıran sütunlar ve önerilen dolgu (imputation) yöntemleri (örn: GPA için median, kategorikler için mode).
+  * Eksik değer barındıran tüm 9 sütun (`Pre_Semester_GPA`, `Post_Semester_GPA`, `Weekly_GenAI_Hours`, `Skill_Retention_Score`, `Tool_Diversity`, `Perceived_AI_Dependency`, `Traditional_Study_Hours`, `Prompt_Engineering_Skill`, `Anxiety_Level_During_Exams`) ve önerilen dolgu (imputation) yöntemleri (sayısallar için median, kategorikler için mode).
   * Hangi kategorik sütunların Ordinal (örn: `Year_of_Study`, `Prompt_Engineering_Skill`) hangilerinin One-Hot (örn: `Major_Category`, `Primary_Use_Case`) encode edilmesi gerektiği.
   * Hangi sayısal sütunların ölçeklendirilmeye (scaling) ihtiyaç duyduğu.
-  * EDA süresince üretilen tüm grafiklerin `figures/` klasörüne `eda_*.png` olarak kaydedilmesi doğrulanacak.
+  * `Post_Semester_GPA` sütununun veri sızıntısı nedeniyle veri setinden düşürülmesi gerektiği.
+  * EDA süresince üretilen tüm 17 grafik dosyasının `figures/` klasörüne kaydedilmesi doğrulanacak.
 
 ---
 
