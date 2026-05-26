@@ -197,14 +197,18 @@ except Exception as e:
 ```
 *Altına eklenecek analist yorumu:*
 ```markdown
-**Veri Analisti Yorumu:** Eksik değer ısı haritası incelendiğinde, eksikliklerin veri setinin geneline rastgele dağıldığı (Missing Completely at Random - MCAR) gözlemlenmektedir. Özellikle `Pre_Semester_GPA`, `Post_Semester_GPA`, `Weekly_GenAI_Hours` ve `Skill_Retention_Score` değişkenlerinde eksik değerler mevcuttur. Bu değişkenler modelleme öncesi veri hazırlama (Data Preparation) aşamasında uygun median/mean imputer yöntemleriyle doldurulmalıdır.
+**Veri Analisti Yorumu:** Eksik değer ısı haritası incelendiğinde, eksikliklerin veri setinin geneline rastgele dağıldığı (Missing Completely at Random - MCAR) gözlemlenmektedir. Veri setinde `Pre_Semester_GPA`, `Post_Semester_GPA`, `Weekly_GenAI_Hours`, `Skill_Retention_Score`, `Tool_Diversity`, `Perceived_AI_Dependency`, `Traditional_Study_Hours`, `Prompt_Engineering_Skill` ve `Anxiety_Level_During_Exams` olmak üzere 9 değişkende eksik değerler mevcuttur. Bu değişkenler modelleme öncesi veri hazırlama (Data Preparation) aşamasında uygun median (sayısal) veya mode (kategorik) imputer yöntemleriyle doldurulmalıdır.
 ```
 
 #### Hücre 4 (Code) - Sayısal Değişken Dağılımları
 Yerleştirilecek alan: **Section 2.5**
 ```python
 # 2.5 Sayısal Değişken Dağılımları
-num_cols = ['Pre_Semester_GPA', 'Weekly_GenAI_Hours', 'Traditional_Study_Hours', 'Skill_Retention_Score', 'Anxiety_Level_During_Exams']
+num_cols = [
+    'Pre_Semester_GPA', 'Weekly_GenAI_Hours', 'Traditional_Study_Hours', 
+    'Skill_Retention_Score', 'Anxiety_Level_During_Exams', 
+    'Tool_Diversity', 'Perceived_AI_Dependency', 'Post_Semester_GPA'
+]
 
 for col in num_cols:
     fig = make_subplots(rows=1, cols=2, subplot_titles=(f"{col} Dağılımı", f"{col} Kutu Grafiği (Risk Grubu Bazlı)"))
@@ -239,7 +243,7 @@ for col in num_cols:
 ```
 *Altına eklenecek analist yorumu:*
 ```markdown
-**Veri Analisti Yorumu:** Haftalık yapay zeka kullanım saatleri (`Weekly_GenAI_Hours`) arttıkça ve geleneksel çalışma saatleri (`Traditional_Study_Hours`) azaldıkça öğrencilerin tükenmişlik riskinin (`High`) belirgin şekilde arttığı gözlenmektedir. Sınav anksiyete seviyesi (`Anxiety_Level_During_Exams`) yüksek olan öğrencilerin de ezici çoğunluğu High risk grubundadır. GPA değerleri ise daha homojen dağılmakla birlikte, düşük GPA seviyeleri yüksek tükenmişlik riskiyle kısmen ilişkilidir.
+**Veri Analisti Yorumu:** Haftalık yapay zeka kullanım saatleri (`Weekly_GenAI_Hours`) ve algılanan yapay zeka bağımlılığı (`Perceived_AI_Dependency`) arttıkça, ayrıca sınav anı kaygısı (`Anxiety_Level_During_Exams`) yükseldikçe öğrencilerin yüksek tükenmişlik riski (`High`) grubunda yer alma oranı belirgin şekilde artmaktadır. Geleneksel çalışma saatleri (`Traditional_Study_Hours`) arttıkça ise tükenmişlik riski azalmaktadır. Akademik ortalamalar (`Pre_Semester_GPA` ve `Post_Semester_GPA`) ile beceri kalıcılığı (`Skill_Retention_Score`) ve araç çeşitliliği (`Tool_Diversity`) risk seviyelerine göre daha homojen bir dağılım sergilemektedir; ancak düşük not ortalaması ve düşük beceri kalıcılığı yüksek riskle kısmen ilişkilidir. Not: `Post_Semester_GPA` dönem sonu verisi olduğundan, modelleme aşamasında veri sızıntısını önlemek için hariç tutulacaktır.
 ```
 
 #### Hücre 5 (Code) - Kategorik Değişkenler
@@ -278,14 +282,26 @@ for col in cat_cols:
 ```
 *Altına eklenecek analist yorumu:*
 ```markdown
-**Veri Analisti Yorumu:** Yapay zekayı ağırlıklı olarak "Direct_Answer_Generation" (Doğrudan Cevap Üretme) amacıyla kullanan öğrencilerde `High` tükenmişlik riski oranı, "Ideation" veya "Debugging" amacıyla kullananlara göre daha yüksektir. Ayrıca, prompt mühendisliği becerisi (`Prompt_Engineering_Skill`) 'Beginner' olanlar ile ücretli aboneliği (`Paid_Subscription`) bulunmayan öğrencilerde tükenmişlik riski bir miktar daha baskındır. Bölüm bazlı dağılımlarda (Major_Category) ise STEM ve Humanities öğrencileri arasında hafif varyasyonlar mevcuttur.
+**Veri Analisti Yorumu:** Yapay zekayı birincil kullanım amaçlarına (`Primary_Use_Case`) göre incelediğimizde, `Direct_Answer_Generation` (Doğrudan Cevap Üretme) ve `Debugging/Troubleshooting` (Hata Ayıklama) dahil tüm kategorilerde yüksek tükenmişlik riski (`High`) oranının birbirine oldukça yakın ve dengeli (yaklaşık %25-%28 bandında) olduğu görülmektedir. Hacimsel olarak incelendiğinde, `Debugging/Troubleshooting` en fazla öğrenci içeren gruptur ve dolayısıyla bu gruptaki yüksek riskli öğrenci sayısı mutlak değer olarak daha fazladır. Ayrıca, prompt mühendisliği becerisi (`Prompt_Engineering_Skill`) 'Beginner' olanlar ile ücretli aboneliği bulunmayan öğrencilerde tükenmişlik riski bir miktar daha baskındır.
 ```
 
 #### Hücre 6 (Code) - Korelasyon Matrisi
 Yerleştirilecek alan: **Section 2.6**
 ```python
 # 2.6 Korelasyon Matrisi
-corr_matrix = df[num_cols].corr()
+TARGET = 'Burnout_Risk_Level'
+num_cols = [
+    'Pre_Semester_GPA', 'Weekly_GenAI_Hours', 'Traditional_Study_Hours', 
+    'Skill_Retention_Score', 'Anxiety_Level_During_Exams', 
+    'Tool_Diversity', 'Perceived_AI_Dependency', 'Post_Semester_GPA'
+]
+
+# Korelasyon matrisinde hedef değişkeni de göstermek için geçici olarak sayısallaştırıyoruz
+corr_df = df[num_cols].copy()
+target_map = {'Low': 0, 'Medium': 1, 'High': 2}
+corr_df['Burnout_Risk_Level'] = df[TARGET].map(target_map)
+
+corr_matrix = corr_df.corr()
 
 fig = px.imshow(
     corr_matrix,
@@ -295,7 +311,7 @@ fig = px.imshow(
 )
 
 fig.update_layout(
-    title="Sayısal Değişkenler Korelasyon Matrisi",
+    title="Sayısal Değişkenler ve Hedef Değişken Korelasyon Matrisi",
     template="plotly_dark",
     paper_bgcolor='#0f0e17',
     plot_bgcolor='#0f0e17'
@@ -310,7 +326,7 @@ except Exception as e:
 ```
 *Altına eklenecek analist yorumu:*
 ```markdown
-**Veri Analisti Yorumu:** Korelasyon matrisi incelendiğinde, en güçlü pozitif ilişkilerden birinin `Weekly_GenAI_Hours` ile `Anxiety_Level_During_Exams` arasında olduğu görülmektedir. Diğer yandan, `Traditional_Study_Hours` ile `Weekly_GenAI_Hours` arasında negatif bir ilişki söz konusudur; bu durum yapay zeka kullanımının artmasının geleneksel çalışma alışkanlıklarını ikame ettiğini doğrulamaktadır. GPA'ler ile diğer değişkenler arasında ise doğrusal korelasyonlar zayıftır, bu da doğrusal olmayan modellerin (Ağaç tabanlı algoritmalar gibi) tercih edilmesi gerektiğini göstermektedir.
+**Veri Analisti Yorumu:** Korelasyon matrisi incelendiğinde, hedef değişkenimiz `Burnout_Risk_Level` ile en güçlü pozitif ilişkinin `Weekly_GenAI_Hours` (0.47) ve `Perceived_AI_Dependency` (0.37) arasında olduğu görülmektedir. Sınav anı kaygısı da target ile pozitif yönlü (0.16) ilişkilidir. Geleneksel çalışma saatleri (`Traditional_Study_Hours`) ile hedef değişken arasında ise negatif yönlü (-0.14) bir ilişki mevcuttur. Diğer yandan, `Traditional_Study_Hours` ile `Weekly_GenAI_Hours` arasındaki negatif korelasyon (-0.16) yapay zekanın geleneksel çalışmanın yerini aldığını desteklemektedir. GPA değerleri ile diğer özellikler arasındaki ilişkiler oldukça zayıftır, bu da doğrusal olmayan modellerin (Ağaç tabanlı algoritmalar) tercih edilmesi gerektiğini göstermektedir.
 ```
 
 #### Hücre 7 (Code) - Aykırı Değer Tespiti
@@ -318,6 +334,11 @@ Yerleştirilecek alan: **Section 2.7**
 ```python
 # 2.7 Aykırı Değer Analizi (IQR Yöntemi)
 outlier_summary = []
+num_cols = [
+    'Pre_Semester_GPA', 'Weekly_GenAI_Hours', 'Traditional_Study_Hours', 
+    'Skill_Retention_Score', 'Anxiety_Level_During_Exams', 
+    'Tool_Diversity', 'Perceived_AI_Dependency', 'Post_Semester_GPA'
+]
 
 for col in num_cols:
     Q1 = df[col].quantile(0.25)
@@ -343,27 +364,41 @@ display(outlier_df.style.set_properties(**{'background-color': '#111827', 'color
 **Veri Analisti Yorumu:** IQR analizi sonuçlarına göre, sayısal değişkenlerin çoğunda uç veya aykırı değer bulunmamaktadır veya oran %0.1'in altındadır. Bu durum veri setinin nispeten temiz olduğunu göstermektedir. Var olan çok az sayıdaki aykırı değer için kırpma (clipping / winsorization) veya robust ölçeklendirme (RobustScaler) metotları, sonraki faz olan veri hazırlama aşamasında alternatif olarak değerlendirilebilir.
 ```
 
-#### Hücre 8 (Markdown) - EDA Sonu Raporu / Handoff Notu
-Yerleştirilecek alan: **Section 2.8'in sonu**
+#### Hücre 8 (Markdown) - Veri Sızıntısı Değerlendirmesi
+Yerleştirilecek alan: **Section 2.8**
 ```markdown
-### 2.8 EDA Bulguları ve Cenker'e Handoff Notları
+### 2.8 Veri Sızıntısı (Data Leakage) Değerlendirmesi
+
+Modelin gerçek dünyada (dönem başında) doğru ve güvenilir tahminler yapabilmesi için veri sızıntısı riski taşıyan özellikleri analiz etmek ve filtrelemek kritik öneme sahiptir.
+
+* **`Post_Semester_GPA` (Dönem Sonu Not Ortalaması):** Dönem sonuna ait bir ölçümdür. İş problemi, dönem başındaki verilere göre dönem sonundaki tükenmişlik riskini tahmin etmektir. Dönem başında bilinmeyen bu özelliğin modele feature olarak girilmesi **veri sızıntısına (data leakage)** sebep olur. Bu nedenle bu sütun **kesinlikle modelleme dışı bırakılacaktır.**
+* **`Skill_Retention_Score` (Beceri Kalıcılığı Skoru):** Dönem içi bir değerlendirme olarak kabul edilmiştir. Ancak, modelleme sonrasında bu özelliğin model üzerindeki etkisi yakından izlenecektir. Beklenmedik düzeyde yüksek bir feature importance gösterirse, veri sızıntısı şüphesiyle modelden çıkarılması değerlendirilmelidir.
+* **`GPA_Change` (Not Değişimi Önerisi):** `Post_Semester_GPA - Pre_Semester_GPA` şeklinde bir özellik türetilmesi önerisi, içinde `Post_Semester_GPA` barındırdığı için **aynı veri sızıntısı riskini taşımaktadır ve kesinlikle uygulanmayacaktır.**
+```
+
+#### Hücre 9 (Markdown) - EDA Sonu Raporu / Handoff Notu
+Yerleştirilecek alan: **Section 2.9**
+```markdown
+### 2.9 EDA Bulguları ve Cenker'e Handoff Notları
 
 **Cenker (Faz 3 - Data Preparation)** için hazırlanan veri hazırlama yönergeleri aşağıdadır:
 
 1. **Eksik Değer Yönetimi (Imputation):**
-   * Sayısal Değişkenler (`Pre_Semester_GPA`, `Post_Semester_GPA`, `Weekly_GenAI_Hours`, `Traditional_Study_Hours`, `Skill_Retention_Score`, `Anxiety_Level_During_Exams`): Çarpık olmayan veya normal dağılıma yakın dağılımlar için **Median Imputer** kullanılması önerilir.
+   * Sayısal Değişkenler (`Pre_Semester_GPA`, `Post_Semester_GPA`, `Weekly_GenAI_Hours`, `Traditional_Study_Hours`, `Skill_Retention_Score`, `Anxiety_Level_During_Exams`, `Tool_Diversity`, `Perceived_AI_Dependency`): Çarpık olmayan veya normal dağılıma yakın dağılımlar için **Median Imputer** kullanılması önerilir.
    * Kategorik Değişkenler (`Prompt_Engineering_Skill`, `Primary_Use_Case`): Eksik değerler en sık gözlenen değerle (**Mode Imputer**) veya "Unknown" gibi sabit bir kategori atanarak doldurulmalıdır.
 2. **Kategorik Değişken Encoding:**
-   * `Prompt_Engineering_Skill` ve `Year_of_Study` değişkenleri doğal bir hiyerarşi içerdiğinden **OrdinalEncoder** (Beginner -> Intermediate -> Advanced) ile sayısallaştırılmalıdır.
-   * `Major_Category`, `Primary_Use_Case` ve `Institutional_Policy` sütunları hiyerarşik olmadığından veri sızıntısını önleyecek şekilde train seti üzerinde fit edilerek **OneHotEncoder** ile dönüştürülmelidir.
+   * `Prompt_Engineering_Skill` ve `Year_of_Study` değişkenleri doğal bir hiyerarşi içerdiğinden **OrdinalEncoder** (Beginner -> Intermediate -> Advanced; Freshman -> Senior) ile sayısallaştırılmalıdır.
+   * `Major_Category`, `Primary_Use_Case` ve `Institutional_Policy` sütunları hiyerarşik olmadığından train seti üzerinde fit edilerek **OneHotEncoder** ile dönüştürülmelidir.
    * `Paid_Subscription` kolonu boolean yapıda olup doğrudan 1 ve 0'a cast edilebilir.
 3. **Scaling:**
    * Modelleme aşamasında SVM, KNN ve Lojistik Regresyon gibi mesafeye duyarlı algoritmalar da kullanılacağından, tüm sayısal özellikler `StandardScaler` ile standartlaştırılmalıdır.
 4. **Yeni Özellik Türetimi (Feature Engineering) Önerileri:**
-   * `GPA_Change` = `Post_Semester_GPA` - `Pre_Semester_GPA` (YZ kullanımının başarıya doğrudan etkisini ölçmek için).
    * `Study_Ratio` = `Weekly_GenAI_Hours` / (`Traditional_Study_Hours` + 1) (Geleneksel çalışma ile YZ kullanımı arasındaki dengeyi temsil eden oran).
    * `Total_Study_Hours` = `Weekly_GenAI_Hours` + `Traditional_Study_Hours` (Toplam akademik efor).
-5. **Görsellerin Durumu:** Tüm grafikler `figures/` klasörü altına PNG formatında başarıyla kaydedilmiştir.
+   * `GPA_Change` → **UYGULAMA (Veri Sızıntısı Engellendi):** `Post_Semester_GPA` içerdiği için veri sızıntısına yol açmaktadır.
+5. **Veri Sızıntısı Filtrelemesi:**
+   * `Post_Semester_GPA` ve `Student_ID` sütunları veri sızıntısını ve ezberlemeyi önlemek için pipeline öncesinde veri setinden düşürülmelidir (`drop`).
+6. **Görsellerin Durumu:** Tüm grafikler `figures/` klasörü altına PNG formatında başarıyla kaydedilmiştir.
 ```
 
 ---
