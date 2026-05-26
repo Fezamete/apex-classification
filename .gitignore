@@ -1,0 +1,26 @@
+# Claude Code local settings
+.claude/settings.local.json
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.env
+.venv/
+env/
+venv/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Data (raw korunur, processed geçici)
+data/processed/
+data/model_ready/
+
+# Models (büyük dosyalar)
+models/*.joblib
+models/*.pkl
+
+# IDE
+.vscode/
+.idea/

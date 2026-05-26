@@ -19,7 +19,7 @@
 | Berkay | 4–5 | Modeling + Evaluation |
 | Ethem | 6 | Deployment + Tanıtım Sitesi |
 
-Detaylı görev listeleri için: `TASKS.md`
+Detaylı görev listeleri için: `plans_and_agents/TASKS.md`
 
 ---
 
